@@ -1,50 +1,90 @@
 # LastLap
 
-**Make the next hour count.** LastLap is a small study desk for students who need help choosing what to work on next. It keeps assignments together and turns due dates, effort, and importance into a useful priority order.
+LastLap is a full-stack assignment planner for students. It helps students decide what to work on next by ranking assignments using due date, importance, and estimated effort.
 
-## Problem and users
+## Product and core workflows
 
-Students often track work across course pages, notes, and memory. When several deadlines overlap, it can be hard to decide what deserves attention first. LastLap is for students who want one quick view of their workload and a gentle nudge toward the next action.
+- Create assignments with a course, due date, effort estimate, and importance.
+- See active assignments ranked by urgency, importance, and estimated effort.
+- Filter assignments due today or already completed.
+- Mark assignments complete, restore them to active work, or delete them.
+- Run a 25-minute focus timer.
+- Persist assignments in MongoDB, with server-side validation and clear API errors.
 
-## What it does
+Priority is a transparent heuristic: deadlines closer to today increase urgency, importance adds weight, and a larger effort estimate slightly reduces the score to help surface manageable next steps. It is a planning aid, not an objective measure.
 
-- Add an assignment with a course, due date, estimated effort, and importance.
-- Automatically rank active work using deadline urgency, importance, and estimated effort. Overdue work and work due today rise to the top.
-- Filter the list to active work, assignments due today, or completed work.
-- Mark work complete or move it back to active work; remove an assignment when it is no longer needed.
-- Run a 25-minute focus timer with pause, resume, reset, and completion feedback.
-- Keep assignments in browser local storage so they remain after a refresh on the same device.
+## MERN architecture
 
-A few example assignments are included the first time the app opens so the priority view is easy to explore. They can be completed or removed like any other assignment.
+- **MongoDB** stores assignment documents with due dates, effort, importance, completion state, and timestamps.
+- **Express + Node.js** exposes account, task, and health endpoints; validates requests; enforces per-account task ownership; and connects to MongoDB through Mongoose.
+- **React** renders the planner, priority ordering, filters, form validation messages, loading/error states, and focus timer.
+- **Vite** serves the React client during development and builds static assets for deployment. The Express server can serve the built client in production when deployed as one service.
 
-## Technology and design
+Email and password accounts keep each student's assignments private from other accounts. Passwords are hashed with bcryptjs; the API issues short-lived signed tokens, and task reads and changes are scoped to the authenticated account. Tokens are stored in browser local storage for this demo, so keep the frontend free of unsafe HTML injection and use HTTPS when deployed.
 
-- HTML, CSS, and modern browser JavaScript; no build step or server required.
-- Browser `localStorage` stores the user's assignment list. No account or personal data is sent to a server.
-- The interface is divided into a workload view, a task-entry dialog, and a focus corner. `app.js` owns the data, priority calculation, persistence, filters, and timer; `styles.css` provides responsive layouts for desktop and mobile.
-- Priority is a simple, explainable score: urgency increases as a due date approaches, importance adds weight, and larger estimated effort slightly reduces the score to favor achievable next steps. The labels are guidance, not a promise of an objectively correct decision.
+## Prerequisites
 
-## Run locally
+- Node.js 20.19+ or 22.12+ and npm.
+- A MongoDB database, either local or MongoDB Atlas.
 
-1. Download or clone this repository.
-2. Open `index.html` in a current browser. No package installation or environment variables are required.
-3. Add, complete, filter, or delete assignments. Refresh the page to confirm assignments persist on that browser and device.
+## Local setup
 
-The Google Fonts link is an optional visual enhancement; the browser falls back to system fonts if it cannot reach Google Fonts.
+1. Open this `lastlap` folder in VS Code.
+2. Install dependencies for the project scripts, client, and API:
 
-## Deployment
+   ```bash
+   npm install
+   npm --prefix client install
+   npm --prefix server install
+   ```
 
-This is a static app and can be hosted by any static site provider. Publish the contents of this folder with `index.html` as the entry page. No API keys or environment variables are needed. Add the public URL here after deployment: **Not deployed yet**.
+3. Copy `server/.env.example` to `server/.env`. Replace `MONGODB_URI` with your database connection string. Generate a signing secret with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"` and put that value in `JWT_SECRET`. Keep `server/.env` out of Git. For local MongoDB, a URI such as `mongodb://127.0.0.1:27017/lastlap` works. For Atlas, use your cluster's URI and allow your current IP. URL-encode special characters in the database username or password.
+4. Start both the API and React dev server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open the Vite URL printed in the terminal (normally `http://localhost:5173`). The API runs on port `5000`; Vite forwards `/api` requests to it.
+
+On first use, create an account in LastLap (passwords are hashed and assignments are scoped to that account). If the page reports a database or authentication configuration problem, check both values in `server/.env` and restart `npm run dev`. Atlas requires a database user and an allowed IP address before an application can connect; see the [Atlas connection guide](https://www.mongodb.com/docs/atlas/driver-connection/) and [IP access list guide](https://www.mongodb.com/docs/atlas/security/ip-access-list/).
+
+## Environment variables
+
+### Server (`server/.env`)
+
+- `PORT` — API port, defaults to `5000`.
+- `MONGODB_URI` — required MongoDB connection string. Keep it secret.
+- `JWT_SECRET` — required private signing key with at least 32 characters.
+- `CLIENT_ORIGIN` — allowed browser origin(s), comma-separated. Local default: `http://localhost:5173`.
+
+### Client (`client/.env`, only for a separately hosted API)
+
+- `VITE_API_URL` — public base URL of the API, without a trailing slash. Leave unset for local development or a single-service deployment. Values embedded in client variables are public, so never put secrets here.
+
+## Production build
+
+```bash
+npm install
+npm --prefix client install
+npm --prefix server install
+npm run build
+npm start
+```
+
+The Node service serves `client/dist` after the build and serves API routes under `/api`. Configure `MONGODB_URI` in the hosting provider's secret settings and set `CLIENT_ORIGIN` to the deployed website origin. The hosting provider must support a long-running Node service and MongoDB outbound connections. If hosting the client and API separately, set `VITE_API_URL` for the client and set `CLIENT_ORIGIN` for the API.
+
+Deployment URL: **Not deployed yet**.
 
 ## Demo video outline (3–5 minutes)
 
-1. Introduce the student deadline problem and who LastLap is for.
-2. Add an assignment and show how due date, importance, and effort affect its position.
-3. Show the due-today filter, complete an assignment, then show it in Completed.
-4. Refresh to demonstrate local persistence and start/pause/reset the focus timer.
-5. Close with the chosen architecture and where the app is deployed.
+1. Introduce the student workload problem, target user, and account sign-up.
+2. Create assignments with different due dates, effort, and importance; show the priority ordering.
+3. Filter due-today work, complete an assignment, and show it in Completed.
+4. Refresh to demonstrate MongoDB persistence; start, pause, and reset the focus timer.
+5. Briefly explain the React client, Express API, and MongoDB data model.
 
-## Submission details to fill in
+## Submission details
 
 - **Project name:** LastLap
 - **Student name:** Add your name
@@ -52,7 +92,12 @@ This is a static app and can be hosted by any static site provider. Publish the 
 - **GitHub repository:** Add the public repository URL
 - **Deployed application:** Add the public deployment URL
 - **Demo video:** Add the accessible video URL
-- **Tech stack:** HTML, CSS, JavaScript, browser local storage
-- **Major features:** Priority scoring, assignment workflow, filters, completion tracking, local persistence, focus timer
+- **Tech stack:** MongoDB, Express, React, Node.js, Vite
+- **Major features:** Account registration/login, private assignment lists, priority scoring, filters, completion tracking, MongoDB persistence, server-side validation, API error handling, focus timer
 
-The official submission form is linked in the provided guidelines: https://forms.gle/sBy4sfqyiRG2Zpom9. Complete it yourself after replacing the placeholders and checking that your links are public.
+Official submission form from the supplied guidelines: https://forms.gle/sBy4sfqyiRG2Zpom9
+
+
+
+
+
