@@ -10,7 +10,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const tokenFor = user => jwt.sign({ sub: user.id }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
 router.use((_req, res, next) => {
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) return res.status(503).json({ error: 'Authentication is not configured. Set a JWT_SECRET with at least 32 characters in server/.env.' });
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) return res.status(503).json({ error: 'Authentication is not configured. Set a JWT_SECRET with at least 32 characters in backend/.env.' });
   next();
 });
 
@@ -50,3 +50,4 @@ router.get('/me', requireAuth, async (req, res, next) => {
 });
 
 export default router;
+

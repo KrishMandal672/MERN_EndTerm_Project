@@ -1,5 +1,5 @@
 {
-  "name": "@lastlap/server",
+  "name": "lastlap-backend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -13,3 +13,4 @@
     "mongoose": "^8.18.0"
   }
 }
+

@@ -22,11 +22,11 @@ app.use('/api/tasks', requireDatabase, taskRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'API route not found.' }));
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const clientDist = path.resolve(here, '../../client/dist');
-app.use(express.static(clientDist));
+const frontendDist = path.resolve(here, '../../frontend/dist');
+app.use(express.static(frontendDist));
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
-  res.sendFile(path.join(clientDist, 'index.html'), error => error && next(error));
+  res.sendFile(path.join(frontendDist, 'index.html'), error => error && next(error));
 });
 
 app.use((error, _req, res, _next) => {
@@ -42,5 +42,7 @@ app.listen(port, () => console.log(`LastLap API listening on port ${port}`));
 if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI).then(() => console.log('MongoDB connected')).catch(error => console.error('MongoDB connection failed:', error.message));
 } else {
-  console.warn('MONGODB_URI is missing. Add it to server/.env to enable database features.');
+  console.warn('MONGODB_URI is missing. Add it to backend/.env to enable database features.');
 }
+
+
