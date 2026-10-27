@@ -20,7 +20,7 @@ Priority is a transparent heuristic: deadlines closer to today increase urgency,
 
 - **MongoDB** stores assignment documents with due dates, effort, importance, completion state, and timestamps.
 - **Express + Node.js** exposes account, task, and health endpoints; validates requests; enforces per-account task ownership; and connects to MongoDB through Mongoose.
-- **React** renders separate Dashboard, Planner, Courses, and Insights screens with hash-based navigation, priority ordering, form validation messages, loading/error states, and the focus timer.
+- **React** renders separate Dashboard, Planner, Courses, and Insights screens with separate direct routes (`/`, `/planner`, `/courses`, and `/insights`), priority ordering, form validation messages, loading/error states, and the focus timer.
 - **Vite** serves the React frontend during development and builds static assets for deployment. The Express backend can serve the built frontend in production when deployed as one service.
 
 Email and password accounts keep each student's assignments private from other accounts. Passwords are hashed with bcryptjs; the API issues short-lived signed tokens, and task reads and changes are scoped to the authenticated account. Tokens are stored in browser local storage for this demo, so keep the frontend free of unsafe HTML injection and use HTTPS when deployed.
@@ -99,6 +99,7 @@ Deployment URL: **Not deployed yet**.
 - **Major features:** Account registration/login, private assignment lists, priority scoring, filters, completion tracking, MongoDB persistence, backend-side validation, API error handling, focus timer
 
 Official submission form from the supplied guidelines: https://forms.gle/sBy4sfqyiRG2Zpom9
+
 
 
 

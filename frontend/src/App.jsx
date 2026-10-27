@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const validPages = ['dashboard','planner','courses','insights'];
+const routeFromPath = () => { const route=window.location.pathname.split('/').filter(Boolean)[0]; return validPages.includes(route)?route:'dashboard'; };
 const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const plusDays = n => { const d = new Date(); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const daysUntil = due => Math.round((new Date(`${due}T00:00:00`) - new Date(`${todayISO()}T00:00:00`)) / 86400000);
@@ -29,7 +31,7 @@ async function request(path, options={}) {
 export default function App() {
   const [tasks,setTasks]=useState([]),[filter,setFilter]=useState('active'),[loading,setLoading]=useState(true),[loadError,setLoadError]=useState(''),[modalOpen,setModalOpen]=useState(false),[saving,setSaving]=useState(false),[formError,setFormError]=useState(''),[toast,setToast]=useState(''),[remaining,setRemaining]=useState(1500),[running,setRunning]=useState(false),[timerDone,setTimerDone]=useState(false);
   const [user,setUser]=useState(null),[authChecked,setAuthChecked]=useState(false),[authMode,setAuthMode]=useState('register'),[authBusy,setAuthBusy]=useState(false),[authError,setAuthError]=useState('');
-  const [page,setPage]=useState(()=>['dashboard','planner','courses','insights'].includes(window.location.hash.slice(1))?window.location.hash.slice(1):'dashboard'),[calendarMonth,setCalendarMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1)),[selectedDate,setSelectedDate]=useState(todayISO()),[defaultDue,setDefaultDue]=useState(plusDays(2)),[courseFilter,setCourseFilter]=useState('');
+  const [page,setPage]=useState(routeFromPath),[calendarMonth,setCalendarMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1)),[selectedDate,setSelectedDate]=useState(todayISO()),[defaultDue,setDefaultDue]=useState(plusDays(2)),[courseFilter,setCourseFilter]=useState('');
   const formRef=useRef(null),dialogRef=useRef(null),toastTimer=useRef(null);
   const notify=useCallback(message=>{setToast(message);clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(''),2800)},[]);
 const loadTasks=useCallback(async()=>{
@@ -40,7 +42,7 @@ const loadTasks=useCallback(async()=>{
   },[]);
   useEffect(()=>{authToken=localStorage.getItem('lastlap_token')||'';if(!authToken){setAuthChecked(true);return}request('/auth/me').then(data=>setUser(data.user)).catch(error=>{if(error.status===401)saveAuthToken('');else setAuthError(error.message)}).finally(()=>setAuthChecked(true))},[]);
   useEffect(()=>{if(user)loadTasks();return()=>clearTimeout(toastTimer.current)},[loadTasks,user]);
-  useEffect(()=>{const syncPage=()=>{const route=window.location.hash.slice(1);setPage(['dashboard','planner','courses','insights'].includes(route)?route:'dashboard')};window.addEventListener('hashchange',syncPage);return()=>window.removeEventListener('hashchange',syncPage)},[]);
+  useEffect(()=>{const syncPage=()=>setPage(routeFromPath());window.addEventListener('popstate',syncPage);return()=>window.removeEventListener('popstate',syncPage)},[]);
   useEffect(()=>{const dialog=dialogRef.current;if(modalOpen&&dialog&&!dialog.open)dialog.showModal();else if(!modalOpen&&dialog?.open)dialog.close()},[modalOpen]);
   useEffect(()=>{if(!running)return;const id=setInterval(()=>setRemaining(t=>{if(t<=1){clearInterval(id);setRunning(false);setTimerDone(true);notify('Focus session complete — well done!');return 0}return t-1}),1000);return()=>clearInterval(id)},[running,notify]);
 
@@ -55,7 +57,7 @@ const loadTasks=useCallback(async()=>{
   async function toggleTask(task){try{const {task:updated}=await request(`/tasks/${task._id}`,{method:'PATCH',body:JSON.stringify({done:!task.done})});setTasks(list=>list.map(t=>t._id===updated._id?updated:t));notify(updated.done?'Nice work — marked complete.':'Moved back to active work.')}catch(error){notify(error.message)}}
   async function deleteTask(task){try{await request(`/tasks/${task._id}`,{method:'DELETE'});setTasks(list=>list.filter(t=>t._id!==task._id));notify('Assignment removed.')}catch(error){notify(error.message)}}
   function changeFilter(value){setFilter(value);setCourseFilter('')}
-  function goToPage(value){window.location.hash=value;setPage(value);if(value!=='dashboard')setCourseFilter('')}
+function goToPage(value){window.history.pushState(null,'',value==='dashboard'?'/':`/${value}`);setPage(value);if(value!=='dashboard')setCourseFilter('')}
   function resetTimer(){setRunning(false);setRemaining(1500);setTimerDone(false)}
   const timerText=`${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`;
   const pageNames={dashboard:'My workload',planner:'Planner',courses:'Courses',insights:'Insights'};
@@ -70,7 +72,7 @@ const loadTasks=useCallback(async()=>{
   if(!authChecked)return <div className="auth-screen"><div className="auth-card"><a className="brand"><b>L</b> lastlap<span>.</span></a><p>Checking your sign-in…</p></div></div>;
   if(!user)return <div className="auth-screen"><div className="auth-card"><a className="brand"><b>L</b> lastlap<span>.</span></a><small className="eyebrow">YOUR PERSONAL STUDY DESK</small><h1>{authMode==='register'?'Make room for focus.':'Welcome back.'}</h1><p>{authMode==='register'?'Create an account to keep your assignments private and in sync.':'Sign in to pick up where you left off.'}</p><form onSubmit={submitAuth}><label>Email address<input type="email" name="email" autoComplete="email" maxLength="254" required placeholder="you@example.com"/></label><label>Password<input type="password" name="password" autoComplete={authMode==='register'?'new-password':'current-password'} minLength="8" maxLength="72" required placeholder="At least 8 characters"/></label>{authError&&<div className="auth-error" role="alert">{authError}</div>}<button className="primary auth-submit" disabled={authBusy}>{authBusy?'Please wait…':authMode==='register'?'Create account':'Sign in'}</button></form><button className="auth-switch" onClick={()=>{setAuthMode(authMode==='register'?'login':'register');setAuthError('')}}>{authMode==='register'?'Already have an account? Sign in':'New to LastLap? Create an account'}</button><small className="auth-foot">Your assignments are visible only to your account.</small></div></div>;
   return <div className="shell">
-    <aside className="sidebar"><a className="brand" href="#dashboard"><b>L</b> lastlap<span>.</span></a><small className="overline">YOUR SPACE</small>
+    <aside className="sidebar"><a className="brand" href="/"><b>L</b> lastlap<span>.</span></a><small className="overline">YOUR SPACE</small>
       <button className={`nav ${page==='dashboard'?'active':''}`} onClick={()=>goToPage('dashboard')}>▦ &nbsp; Dashboard <i>{openTasks.length}</i></button><button className={`nav ${page==='planner'?'active':''}`} onClick={()=>goToPage('planner')}>◷ &nbsp; Planner</button><button className={`nav ${page==='courses'?'active':''}`} onClick={()=>goToPage('courses')}>▤ &nbsp; Courses <i>{courseGroups.length}</i></button><button className={`nav ${page==='insights'?'active':''}`} onClick={()=>goToPage('insights')}>↗ &nbsp; Insights</button>
       <div className="sidebar-bottom"><div className="note">✳<p>Small steps<br/><strong>add up.</strong></p><small>ONE TASK AT A TIME</small></div><div className="profile"><b>{user.email.slice(0,1).toUpperCase()}</b><span><strong>{user.email}</strong><small>Your tasks are private</small><button className="signout" onClick={signOut}>Sign out</button></span><i/></div></div>
     </aside>
@@ -95,6 +97,7 @@ const loadTasks=useCallback(async()=>{
     {toast&&<div className="toast show" role="status" aria-live="polite">{toast}</div>}
   </div>;
 }
+
 
 
 
