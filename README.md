@@ -75,7 +75,16 @@ npm run build
 npm start
 ```
 
-The Node service serves `frontend/dist` after the build and serves API routes under `/api`. Configure `MONGODB_URI` in the hosting provider's secret settings and set `CLIENT_ORIGIN` to the deployed website origin. The hosting provider must support a long-running Node service and MongoDB outbound connections. If hosting the frontend and API separately, set `VITE_API_URL` for the frontend and set `CLIENT_ORIGIN` for the API.
+The Node service serves `frontend/dist` after the build and serves API routes under `/api`. The root-level `render.yaml` configures a single Render web service: it builds the Vite frontend, starts the Express API, checks `/api/health`, generates `JWT_SECRET`, and asks for the MongoDB connection string as a secret. The browser and API share the same Render URL, so no separate frontend host or `CLIENT_ORIGIN` setting is needed.
+
+### Deploy on Render
+
+1. Push this repository to GitHub and sign in to [Render](https://render.com/).
+2. In Render, choose **New → Blueprint**, connect the `LastLap` GitHub repository, and create the service from `render.yaml`.
+3. When asked for `MONGODB_URI`, enter your MongoDB Atlas connection string. Ensure the Atlas network access list allows connections from Render and that your database user has a strong password.
+4. Wait for the first deployment to finish, then open the `.onrender.com` address shown in the service dashboard. Verify `/api/health`, create an account, and add an assignment.
+
+Render Free web services can spin down after inactivity, so the first visit after a quiet period may take longer. See [Render free service limitations](https://render.com/docs/free).
 
 Deployment URL: **Not deployed yet**.
 
