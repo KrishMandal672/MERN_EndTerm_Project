@@ -5,13 +5,13 @@ LastLap is a full-stack assignment planner for students. It helps students decid
 ## Product and core workflows
 
 - Create assignments with a course, due date, effort estimate, and importance.
-- See active assignments ranked by urgency, importance, and estimated effort.
+- Search assignments by name or course, sort by priority, due date, or effort, and see active work ranked by urgency, importance, and estimated effort.
 - Filter assignments due today or already completed.
 - Browse a monthly planner, inspect deadlines for a selected date, and add an assignment directly to that day.
 - Browse courses inferred from assignment subjects, see completion progress, and jump to a course's assignments.
 - Review insights including completion rate, overdue work, remaining effort, and course workload.
 - Mark assignments complete, restore them to active work, or delete them.
-- Run a 25-minute focus timer.
+- Run a 25- or 50-minute focus timer.
 - Persist assignments in MongoDB, with backend-side validation and clear API errors.
 
 Priority is a transparent heuristic: deadlines closer to today increase urgency, importance adds weight, and a larger effort estimate slightly reduces the score to help surface manageable next steps. It is a planning aid, not an objective measure.
@@ -20,7 +20,7 @@ Priority is a transparent heuristic: deadlines closer to today increase urgency,
 
 - **MongoDB** stores assignment documents with due dates, effort, importance, completion state, and timestamps.
 - **Express + Node.js** exposes account, task, and health endpoints; validates requests; enforces per-account task ownership; and connects to MongoDB through Mongoose.
-- **React** renders separate Dashboard, Planner, Courses, and Insights screens with separate direct routes (`/`, `/planner`, `/courses`, and `/insights`), priority ordering, form validation messages, loading/error states, and the focus timer.
+- **React** renders separate Dashboard, Planner, Courses, and Insights screens with separate direct routes (`/`, `/planner`, `/courses`, and `/insights`), priority ordering, assignment search and sorting, form validation messages, loading/error states, and the 25- and 50-minute focus timer.
 - **Vite** serves the React frontend during development and builds static assets for deployment. The Express backend can serve the built frontend in production when deployed as one service.
 
 Email and password accounts keep each student's assignments private from other accounts. Passwords are hashed with bcryptjs; the API issues short-lived signed tokens, and task reads and changes are scoped to the authenticated account. Tokens are stored in browser local storage for this demo, so keep the frontend free of unsafe HTML injection and use HTTPS when deployed.
@@ -84,7 +84,7 @@ Deployment URL: **Not deployed yet**.
 1. Introduce the student workload problem, target user, and account sign-up.
 2. Create assignments with different due dates, effort, and importance; show the priority ordering and monthly Planner.
 3. Browse Courses and Insights, filter due-today work, complete an assignment, and show it in Completed.
-4. Refresh to demonstrate MongoDB persistence; start, pause, and reset the focus timer.
+4. Refresh to demonstrate MongoDB persistence; start, pause, and reset the 25- and 50-minute focus timer.
 5. Briefly explain the React frontend, Express API, and MongoDB data model.
 
 ## Submission details
@@ -96,9 +96,10 @@ Deployment URL: **Not deployed yet**.
 - **Deployed application:** Add the public deployment URL
 - **Demo video:** Add the accessible video URL
 - **Tech stack:** MongoDB, Express, React, Node.js, Vite
-- **Major features:** Account registration/login, private assignment lists, priority scoring, filters, completion tracking, MongoDB persistence, backend-side validation, API error handling, focus timer
+- **Major features:** Account registration/login, private assignment lists, assignment search and sorting, priority scoring, calendar planner, course progress, insights, filters, completion tracking, MongoDB persistence, server-side validation, API error handling, focus timers.
 
 Official submission form from the supplied guidelines: https://forms.gle/sBy4sfqyiRG2Zpom9
+
 
 
 
