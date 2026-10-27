@@ -108,4 +108,5 @@ For a separately hosted frontend, `VITE_API_URL` can be set in `frontend/.env` t
 The root-level `render.yaml` configures a single Render web service for the frontend and backend. Connect this GitHub repository to Render as a Blueprint, provide `MONGODB_URI` as a secret, and deploy. Render generates `JWT_SECRET` from the Blueprint configuration.
 
 - **GitHub repository:** [soham25bcs10010-png/LastLap](https://github.com/soham25bcs10010-png/LastLap)
-- **Live application:** Add the public `.onrender.com` URL from the Render dashboard here.
+- **Live application:** https://lastlap.onrender.com
+- 
